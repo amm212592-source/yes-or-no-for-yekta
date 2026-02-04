@@ -1,0 +1,670 @@
+<!-- 
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>بازی بله یا خیر حرفه‌ای</title>
+<style>
+  @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@30.1.0/dist/font-face.css');
+  /* Reset */
+  * {
+    box-sizing: border-box;
+    margin:0; padding:0;
+  }
+  body {
+    font-family: 'Vazir', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #8e2de2, #4a00e0);
+    color: #fff;
+    height: 100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+    user-select:none;
+  }
+  .container {
+    background: linear-gradient(145deg, #6f43c8, #3b1b73);
+    border-radius: 32px;
+    width: 380px;
+    max-width: 90vw;
+    padding: 30px 35px 45px;
+    box-shadow:
+      0 8px 20px rgba(70, 0, 125, 0.7),
+      inset 0 0 30px rgba(255, 255, 255, 0.07);
+    position: relative;
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #ffd1ff;
+    text-align: center;
+    margin-bottom: 35px;
+    text-shadow: 0 4px 10px rgba(255 255 255 / 0.5);
+  }
+  #question {
+    font-size: 1.6rem;
+    min-height: 80px;
+    line-height: 1.3;
+    color: #f3e1ff;
+    text-align: center;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    will-change: opacity, transform;
+  }
+  .fadeOutUp {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  .fadeInUp {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 45px;
+  }
+  button {
+    background: linear-gradient(145deg,#e91eff,#c100ff);
+    border: none;
+    outline:none;
+    box-shadow: 0 5px 15px rgba(255 0 255 / 0.6);
+    color: #fff;
+    font-size: 1.2rem;
+    padding: 14px 48px;
+    border-radius: 42px;
+    cursor: pointer;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.4s ease;
+    user-select:none;
+  }
+  button:hover {
+    transform: scale(1.15) rotate(-3deg);
+    box-shadow: 0 10px 25px rgba(255 0 255 / 0.8);
+  }
+  button:active {
+    transform: scale(0.9) rotate(0deg);
+    box-shadow: 0 5px 12px rgba(255 0 255 / 0.4);
+  }
+  button:focus-visible {
+    outline: 3px solid #fff3ff;
+    outline-offset: 4px;
+  }
+  #finalMessage {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #ff80df;
+    margin-top: 35px;
+    text-align: center;
+    animation: pulseScale 1.8s infinite ease-in-out;
+    user-select:none;
+    min-height: 90px;
+  }
+  #counter {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-weight: 700;
+    color: #ff59f7cc;
+    font-size: 1.15rem;
+    user-select:none;
+  }
+  #restartBtn {
+    margin-top: 30px;
+    background: linear-gradient(145deg,#ff6edaff,#dc00ff);
+    box-shadow: 0 7px 20px rgba(255 105 210 / 0.7);
+    display: none;
+  }
+  #restartBtn:hover {
+    transform: scale(1.2);
+    box-shadow: 0 13px 30px rgba(255 105 210 / 0.9);
+  }
+  /* انیمیشن اصل */
+  @keyframes pulseScale {
+    0%, 100% {transform: scale(1);}
+    50% {transform: scale(1.12);}
+  }
+  /* افکت بلور پس زمینه برای عمق */
+  body::before {
+    content: "";
+    position: fixed;
+    top: -150px;
+    left: -150px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle at center, #ff99ff88, transparent 70%);
+    filter: blur(100px);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+  }
+</style>
+</head>
+<body>
+  <div class="container" role="main" aria-live="polite">
+    <h1>🎲 بازی بله یا خیر حرفه‌ای</h1>
+    <div id="counter" aria-label="شماره سوال"></div>
+    <p id="question" class="fadeInUp">آماده‌ای بازی رو شروع کنیم؟</p>
+
+    <div class="buttons" role="group" aria-label="گزینه‌های بله یا خیر">
+      <button id="yesBtn" aria-pressed="false">بله</button>
+      <button id="noBtn" aria-pressed="false">خیر</button>
+    </div>
+
+    <p id="finalMessage" aria-live="assertive"></p>
+    <button id="restartBtn" aria-label="شروع مجدد بازی">شروع دوباره</button>
+  </div>
+
+<script>
+  const questions = [
+    "دوست داری با من وقت بگذرونی؟",
+    "آیا دوست داری به من بیشتر نزدیک بشی؟",
+    "فکر می‌کنی ما می‌تونیم با هم بخندیم؟",
+    "آیا دوست داری دنیا رو با من بهتر کنی؟",
+    "حاضری یک راز کوچیک بهم بگی؟"
+  ];
+  const finalMsg = "همه اینا یه بهونه بود که بگم خیلی دوستت دارم ! 🤭❤️";
+  const questionEl = document.getElementById('question');
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  const finalMessage = document.getElementById('finalMessage');
+  const restartBtn = document.getElementById('restartBtn');
+  const counter = document.getElementById('counter');
+  let currentIndex = 0;
+
+  function updateCounter() {
+    counter.textContent = `سوال ${currentIndex + 1} از ${questions.length}`;
+  }
+
+  function animateQuestion(nextText) {
+    // انیمیشن خروج
+    questionEl.classList.remove('fadeInUp');
+    questionEl.classList.add('fadeOutUp');
+    setTimeout(() => {
+      questionEl.textContent = nextText;
+      questionEl.classList.remove('fadeOutUp');
+      questionEl.classList.add('fadeInUp');
+    }, 400);
+  }
+
+  function next() {
+  if (currentIndex >= questions.length) {
+    // نمایش پیام نهایی با انیمیشن
+    counter.textContent = '';
+    questionEl.style.display = 'none';
+    document.querySelector('.buttons').style.display = 'none';
+    finalMessage.textContent = finalMsg;
+    finalMessage.style.display = 'block';
+    restartBtn.style.display = 'inline-block';
+    return;
+  }
+
+  updateCounter();
+  animateQuestion(questions[currentIndex]);
+  currentIndex++;
+}
+
+  yesBtn.addEventListener('click', () => {
+    next();
+  });
+  noBtn.addEventListener('click', () => {
+    next();
+  });
+  restartBtn.addEventListener('click', () => {
+    currentIndex = 0;
+    finalMessage.style.display = 'none';
+    questionEl.style.display = 'block';
+    document.querySelector('.buttons').style.display = 'flex';
+    restartBtn.style.display = 'none';
+    next();
+  });
+
+  // شروع بازی اول
+  next();
+</script>
+</body>
+</html>
+  -->
+
+  
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title> for yekta </title>
+<style>
+  /* بارگذاری فونت فارسی اختصاصی */
+  @import url('https://cdn.jsdelivr.net/gh/rastikerdar/vazir-font@v30.1.0/dist/font-face.css');
+
+  /* تنظیمات کلی */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  html, body {
+    height: 100%;
+    font-family: 'Vazir', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: #eee;
+    direction: rtl;
+    overflow-x: hidden;
+  }
+
+  /* کنتینر اصلی */
+  .container {
+    max-width: 650px;
+    margin: 50px auto 70px;
+    background: rgba(20, 25, 40, 0.85);
+    border-radius: 22px;
+    box-shadow:
+      0 0 40px rgba(70, 130, 180, 0.4),
+      inset 0 0 30px #1f2a44,
+      0 12px 30px rgba(15, 15, 35, 0.6);
+    padding: 40px 45px 55px;
+    position: relative;
+    transition: transform 0.5s ease, box-shadow 0.5s ease;
+  }
+
+  /* حالت شناور (float effect) برای باکس سوال */
+  .container:hover {
+    transform: translateY(-15px) rotateX(5deg) rotateZ(-3deg);
+    box-shadow:
+      0 0 55px #448cff,
+      inset 0 0 40px #3f51b5,
+      0 18px 38px rgba(50, 100, 200, 0.7);
+  }
+
+  /* هدر سوال شامل شمارش و تیتر */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+  }
+  .counter {
+    font-weight: 900;
+    font-size: 1.35rem;
+    letter-spacing: 0.15em;
+    color: #80b3ff;
+    user-select: none;
+    padding: 8px 18px;
+    border-radius: 12px;
+    background: rgba(70, 130, 180, 0.22);
+    box-shadow: 0 2px 8px rgba(116, 167, 245, 0.6);
+  }
+  .progress-container {
+    flex-grow: 1;
+    margin: 0 18px;
+    height: 10px;
+    background: #2f3e66;
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 2px rgba(255 255 255 / 0.12),
+      inset 0 -1px 4px rgba(0 0 0 / 0.2);
+  }
+  .progress-bar {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #84a9ff, #3f51b5);
+    border-radius: 8px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow:
+      0 2px 6px #628aff;
+  }
+
+  /* متن سوال */
+  .question {
+    font-weight: 700;
+    font-size: 1.85rem;
+    min-height: 130px;
+    text-align: center;
+    line-height: 1.4;
+    color: #c8dffa;
+    text-shadow:
+      0 0 7px #a2bfff,
+      0 2px 8px rgba(30, 44, 76, 0.7);
+    margin-bottom: 48px;
+    user-select: none;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-out {
+    opacity: 0;
+    transform: translateY(-25px);
+  }
+  .fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* دکمه‌ها */
+  .buttons {
+    display: flex;
+    justify-content: center;
+    gap: 35px;
+  }
+  button {
+    flex: 1 1 140px;
+    padding: 18px 0;
+    font-size: 1.35rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    border-radius: 28px;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 5px 15px rgba(0,0,0,0.18),
+      inset 0 -3px 6px rgba(0,0,0,0.2);
+    transition: all 0.35s ease;
+  }
+  button:focus {
+    outline: 3px solid #8ac1ff;
+    outline-offset: 2px;
+  }
+  /* دکمه بله */
+  #btnYes {
+    background: linear-gradient(145deg, #38ef7d, #11998e);
+    color: #fff;
+    box-shadow:
+      0 8px 20px #1f7767,
+      inset 0 0 40px #29c07a;
+  }
+  #btnYes:hover {
+    background: linear-gradient(145deg, #2fcc66, #0b7a79);
+    box-shadow:
+      0 12px 30px #18906a,
+      inset 0 0 60px #37d68e;
+    transform: translateY(-5px) scale(1.06);
+  }
+  #btnYes:active {
+    transform: translateY(-2px) sca
+le(1.03);
+  }
+
+  /* دکمه خیر */
+  #btnNo {
+    background: linear-gradient(145deg, #ff758c, #ff7eb3);
+    color: #fff;
+    box-shadow:
+      0 8px 20px #ad2245,
+      inset 0 0 40px #ff647b;
+  }
+  #btnNo:hover {
+    background: linear-gradient(145deg, #d63658, #e8548c);
+    box-shadow:
+      0 12px 30px #a22344,
+      inset 0 0 60px #ff4f74;
+    transform: translateY(-5px) scale(1.06);
+  }
+  #btnNo:active {
+    transform: translateY(-2px) scale(1.03);
+  }
+
+  /* نوار اسکرول سفارشی */
+  ::-webkit-scrollbar {
+    height: 7px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1e2b46;
+    border-radius: 20px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #597edc;
+    border-radius: 20px;
+    box-shadow: inset 0 0 2px rgba(0,0,0,0.2);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #4c6fd1;
+  }
+
+  /* پیام پایان سوالات */
+  .final-message {
+    margin-top: 50px;
+    font-size: 1.7rem;
+    font-weight: 900;
+    text-align: center;
+    color: #ffd35b;
+    text-shadow:
+      0 0 15px #ffcb33,
+      0 1px 22px #ddaa00;
+    user-select: none;
+    min-height: 130px;
+  }
+
+  /* ریسپانسیو برای موبایل و تبلت */
+  @media (max-width: 700px) {
+    .container {
+      margin: 30px 15px 50px;
+      width: auto;
+      padding: 35px 28px 45px;
+    }
+    .question {
+      font-size: 1.5rem;
+      min-height: 120px;
+      margin-bottom: 40px;
+    }
+    .buttons {
+      gap: 25px;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 16px 0;
+    }
+    .counter {
+      font-size: 1.1rem;
+      padding: 7px 15px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .question {
+      font-size: 1.2rem;
+      min-height: 95px;
+      margin-bottom: 32px;
+    }
+    button {
+      font-size: 1rem;
+      padding: 14px 0;
+      border-radius: 22px;
+    }
+    .header {
+      flex-direction: column;
+      gap: 15px;
+      align-items: flex-start;
+    }
+    .progress-container {
+      width: 100%;
+      margin: 0;
+      height: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<section class="container" aria-label="پرسش و پاسخ تعاملی" role="main">
+  <header class="header" aria-live="polite">
+    <div class="counter" id="counter" aria-atomic="true" aria-live="polite">سوال 1 از 10</div>
+    <div class="progress-container" aria-hidden="true">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </header>
+
+  <article id="question" class="question fade-in" tabindex="0" aria-live="assertive" aria-atomic="true">
+    سلام، آماده‌اید تا چند سوال جذاب و کارآمد را پاسخ دهید؟
+  </article>
+
+  <nav class="buttons" role="group" aria-label="گزینه‌های پاسخ">
+    <button id="btnYes" aria-label="پاسخ بله">بله</button>
+    <button id="btnNo" aria-label="پاسخ خیر">خیر</button>
+  </nav>
+
+  <section class="final-message" id="finalMessage" aria-live="polite" aria-atomic="true" role="alert"></section>
+</section>
+
+<script>
+  (() => {
+    // لیست سوالات متعدد، به سبک واقعی‌تر و جامع‌تر برای افزایش حجم کد و حرفه‌ای بودن محصول
+    const questions = [
+      "خدا رو قبول داری ؟",
+      "دوست داری توی اروپا زندگی کنی ؟",
+      "میخوای شاغل باشی ؟",
+      "اگه شرایط رفتن از ایران رو داشتی میرفتی ؟",
+      "حرف مامانتو بیشتر از بابات گوش میدی ؟",
+      "اشتباه تایپی زیاد میکنی ؟",
+      "دوستات رو دوست داری ؟",
+      "قبول داری که رضا خیلی گشاده ؟",
+      "ماعده مغز نداره",
+      "میدونستی متین خیلی بهت اهمیت میده ؟",
+    ];
+
+    let currentIndex = 0;
+
+    // المنت‌ها از DOM دریافت می‌شوند
+    const counterEl = document.getElementById('counter');
+    const questionEl = document.getElementById('question');
+    const btnYes = document.getElementById('btnYes');
+    const btnNo = document.getElementById('btnNo');
+    const finalMessageEl = document.getElementById('finalMessage');
+    const progressBar = document.getElementById('progressBar');
+    const container = document.querySelector('.container');
+
+    // حالت‌های انیمیشن برای سوال
+    function fadeOutIn(newText) {
+      questionEl.classList.add('fade-out');
+      questionEl.classList.remove('fade-in');
+
+      setTimeout(() => {
+        questionEl.textContent = newText;
+        questionEl.classList.remove('fade-out');
+        questionEl.classList.add('fade-in');
+        questionEl.focus();
+      }, 600);
+    }
+
+    // به‌روزرسانی نوار پیشرفت
+    function updateProgress(index) {
+      const percent = (index / questions.length) * 100;
+      progressBar.style.width = `${percent}%`;
+    }
+
+    // بروزرسانی UI سوال بعدی یا پیام پایان
+    function updateUI() {
+      if (currentIndex < questions.length) {
+        counterEl.textContent = `سوال ${currentIndex + 1} از ${questions.length}`;
+        updateProgress(currentIndex);
+        fadeOutIn(questions[currentIndex]);
+        finalMessageEl.textContent = '';
+        btnYes.disabled = false;
+        btnNo.disabled = false;
+        container.style.pointerEvents = "auto";
+      } else {
+        showFinalMessage();
+      }
+    }
+
+    // نمایش پیام پایان (دلپذیر و حرفه‌ای)
+    function showFinalMessage() {
+      counterEl.textContent = '';
+      progressBar.style.width = '100%';
+      questionEl.textContent = '';
+      btnYes.style.display = 'none';
+      btnNo.style.display = 'none';
+      container.style.pointerEvents = "none";
+
+      const messages = [
+        "حقیقتا میدونم که به این حرفام اهمیت خاصی نمیدی.",
+        "ولی میخوام بگم که خیلی دوست دارم",
+        "میدونم شاید حسی نداشته باشی",
+        "اما اگه جوابت به حرفی که زدم مثبت بود",
+        "اون استیکر دختر تپلو رو بفرست پیویم.",
+        "دوست دارم.",
+        "از طرف متین.",
+      ];
+
+      // ساختار پیام نهایی شامل چند خط با تاخیر
+      finalMessageEl.innerHTML = '';
+      let i = 0;
+
+      const intervalId = setInterval(() => {
+        if (i < messages.length) {
+          const p = document.createElement('p');
+          p.textContent = messages[i];
+          p.style.opacity = '0';
+          p.style.transition = 'opacity 0.8s ease';
+          finalMessageEl.appendChild(p);
+          setTimeout(() => {
+            p.style.opacity = '1';
+          }, 60);
+          i++;
+        } else {
+          clearInterval(intervalId);
+        }
+      }, 1400);
+    }
+
+    // تابع جهت ذخیره نتایج پاسخ‌های کاربر و پردازش در آینده
+    const responses = [];
+
+    // عملکرد کلی دکمه پاسخ (هر د
+// و بله/خیر)
+    function handleResponse(value) {
+      btnYes.disabled = true;
+      btnNo.disabled = true;
+
+      // ذخیره پاسخ (بله یا خیر)
+      responses.push({
+        question: questions[currentIndex],
+        answer: value
+      });
+
+      container.style.pointerEvents = "none";
+
+      // افکت کوتاه برای آرامش انیمیشن
+      questionEl.classList.add('fade-out');
+      questionEl.classList.remove('fade-in');
+
+      setTimeout(() => {
+        currentIndex++;
+        updateUI();
+      }, 750);
+    }
+
+    // اتصال ایونت‌ها به دکمه‌ها با تایپ دقیق
+    btnYes.addEventListener('click', () => handleResponse('بله'));
+    btnNo.addEventListener('click', () => handleResponse('خیر'));
+
+    // امکان کلیدزنی توسط کیبورد (Enter / Space)
+    [btnYes, btnNo].forEach(btn => {
+      btn.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          btn.click();
+        }
+      });
+    });
+
+    // فعال کردن فوکوس اولیه روی سوال برای دسترسی بهتر
+    questionEl.tabIndex = 0;
+    questionEl.focus();
+
+    // مقداردهی اولیه UI
+    updateUI();
+
+    // در صورت نیاز، اجراگر راهنمای حافظه پاسخ‌ها در Console برای توسعه
+    window.getResponses = () => [...responses];
+  })();
+</script>
+
+</body>
+</html>
